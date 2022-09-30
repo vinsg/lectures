@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>Using ressources</title>
+    <link rel="shortcut icon" href="./../favicon.ico" />
+    <link rel="stylesheet" href="./../dist/reset.css" />
+    <link rel="stylesheet" href="./../dist/reveal.css" />
+    <link rel="stylesheet" href="./../dist/theme/blood.css" id="theme" />
+    <link rel="stylesheet" href="./../css/highlight/base16/zenburn.css" />
+
+
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides"><section  data-markdown><script type="text/template">
+## Handling resources with Use
+</script></section><section  data-markdown><script type="text/template">
+Resources in the Kotlin/JVM standard library
+
+- FileReader
+- java.sql.Connection
+- InputStream
+- etc.
+
+<aside class="notes"><p>Ressources in the Kotlin/JVM sdt library need to be managed</p>
+</aside></script></section><section  data-markdown><script type="text/template">```Kotlin [1-8|6]
+fun countCharInFile(path: String) Int {
+	val reader = BufferedReader(FileReader(path))
+	try {
+		return reader.lineSequence().sumOf { it.length }
+	} finally {
+		reader.close()
+	}
+}
+```
+<aside class="notes"><p>Typical java style code. Code is incorrect and buggy</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+But they implement the `closable` interface
+![closable](assets/closable.png)
+</script></section><section  data-markdown><script type="text/template">
+Use the `use` keyword!
+
+<aside class="notes"><p>Which means we can use the use keyword to automaticaly close them.</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+```Kotlin [1-6|3]
+fun countCharInFile(path: String) Int {
+	val reader = BufferedReader(FileReader(path))
+	reader.use {
+		return reader.lineSequence().sumOf { it.lengh }
+	}
+}
+```
+</script></section><section  data-markdown><script type="text/template">```Kotlin [2-4]
+fun countCharInFile(path: String) Int {
+	BufferedReader(FileReader(path)).use { reader -> 
+		return reader.lineSequence().sumOf { it.lengh }
+	}
+}
+```
+<aside class="notes"><p>The receiver is passed as an argument so we can simplify</p>
+</aside></script></section><section  data-markdown><script type="text/template">```Kotlin [2-4]
+fun countCharInFile(path: String) Int {
+    File(path).useLines { lines ->
+        return lines.sumOf { it.lenght }
+    }
+}
+```
+<aside class="notes"><p>Even better we can use the Kotlin Std library with the useLines function</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+```Kotlin [1-5|1]
+fun countCharInFile(path: String) Result<Int> = RunCatching {
+	File(path).useLines { lines ->
+        lines.sumOf { it.length }
+    }
+}
+```
+<aside class="notes"><p>We can make our code safer by using returning a Result. 
+Now the caller has to handle the possible failure states.</p>
+</aside></script></section><section  data-markdown><script type="text/template">
+Usage
+
+```Kotlin
+countCharInFileException("file.txt")
+	.onSuccess { println("Char count: $it") }
+	.onFailure { println(it.message) }
+```
+<aside class="notes"><p>Example usage</p>
+</aside></script></section><section  data-markdown><script type="text/template">### Reference
+
+- `Effective Kotlin` by Marcin Moskala
+- Kotlin Idoms: [kotlinlang.org/docs/idioms.html](https://kotlinlang.org/docs/idioms.html#java-7-s-try-with-resources)
+</script></section><section  data-markdown><script type="text/template">
+## Thank you
+
+- @vinsg
+- Website: [vinsg.ca](https://vinsg.ca)
+- Presentation: [Source]()
+
+
+</script></section></div>
+    </div>
+
+    <script src="./../dist/reveal.js"></script>
+
+    <script src="./../plugin/markdown/markdown.js"></script>
+    <script src="./../plugin/highlight/highlight.js"></script>
+    <script src="./../plugin/zoom/zoom.js"></script>
+    <script src="./../plugin/notes/notes.js"></script>
+    <script src="./../plugin/math/math.js"></script>
+    <script>
+      function extend() {
+        var target = {};
+        for (var i = 0; i < arguments.length; i++) {
+          var source = arguments[i];
+          for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+              target[key] = source[key];
+            }
+          }
+        }
+        return target;
+      }
+
+      // default options to init reveal.js
+      var defaultOptions = {
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+        transition: 'default', // none/fade/slide/convex/concave/zoom
+        plugins: [
+          RevealMarkdown,
+          RevealHighlight,
+          RevealZoom,
+          RevealNotes,
+          RevealMath
+        ]
+      };
+
+      // options from URL query string
+      var queryOptions = Reveal().getQueryHash() || {};
+
+      var options = extend(defaultOptions, {"transition":"none","controls":false,"progress":true}, queryOptions);
+    </script>
+
+
+    <script>
+      Reveal.initialize(options);
+    </script>
+  </body>
+</html>
